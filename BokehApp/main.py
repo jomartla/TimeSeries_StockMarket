@@ -38,8 +38,6 @@ def load_ticker(ticker):
 
     data = data.set_index('date')
 
-    print(slider.value)
-
     return pd.DataFrame({ticker: data.c,
                          ticker + '_returns': data.c.diff(),
                          ticker + '_smooth_1': data.c.rolling(window=slider.value).mean(),
@@ -47,8 +45,6 @@ def load_ticker(ticker):
 
 
 def get_data(t1, t2):
-    print("Entramos en get data")
-
     df1 = load_ticker(t1)
     df2 = load_ticker(t2)
 
@@ -132,7 +128,6 @@ def radio_button_group_change(attrname, old, new):
         slider.end = 120
         slider.value = 10
     elif new == 2:
-        print("Predictions")
         ts1_smooth_1.visible = False
         ts2_smooth_1.visible = False
         ts1_pred.visible = True
@@ -144,13 +139,7 @@ def radio_button_group_change(attrname, old, new):
 
 
 def update(selected=None):
-
-    print("Entramos update")
-
     t1, t2 = ticker1.value, ticker2.value
-
-    print(t1)
-    print(t2)
 
     df = get_data(t1, t2)
 
