@@ -30,7 +30,11 @@ def load_ticker(ticker):
     data = pd.read_csv(file_name, header=1, parse_dates=['date'],
                        names=['date', 'o', 'h', 'l', 'c', 'v', 'name'])
 
-    pred_file_name = join(DATA_DIR, "predictions_stock_market.csv")
+    if slider.title == "Days used for prediction":
+        pred_file_name = join(DATA_DIR, "predictions_stock-market-length-%d.csv" % slider.value)
+    else:
+        pred_file_name = join(DATA_DIR, "predictions_stock-market-length-30.csv")
+
     pred = pd.read_csv(pred_file_name, header=1, parse_dates=['date'],
                        names=['date', 'AAPL_pred', 'AMZN_pred', 'GOOGL_pred', 'IBM_pred'], sep=";")
 
@@ -125,8 +129,9 @@ def radio_button_group_change(attrname, old, new):
         slider.title = "Slide window"
         slider.visible = True
         slider.start = 5
+        slider.step = 1
         slider.end = 120
-        slider.value = 10
+        slider.value = 5
     elif new == 2:
         ts1_smooth_1.visible = False
         ts2_smooth_1.visible = False
@@ -134,6 +139,10 @@ def radio_button_group_change(attrname, old, new):
         ts2_pred.visible = True
         slider.title = "Days used for prediction"
         slider.visible = True
+        slider.start = 10
+        slider.step = 20
+        slider.end = 50
+        slider.value = 10
 
     update()
 
