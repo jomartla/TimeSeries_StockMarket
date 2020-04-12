@@ -6,6 +6,7 @@ Use the ``bokeh serve`` command to run the example by executing:
 at your command prompt.
 
 """
+import os
 from functools import lru_cache
 from os.path import dirname, join
 
@@ -15,11 +16,12 @@ from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource, PreText, Select
 from bokeh.models.widgets import RadioButtonGroup, Div, Slider
-from bokeh.plotting import figure
+from bokeh.plotting import figure, curdoc
 
 DATA_DIR = join(dirname(__file__), 'Dataset')
 
 DEFAULT_TICKERS = ['AMZN', 'AAPL', 'GOOGL', 'IBM']
+
 
 def nix(val, lst):
     return [x for x in lst if x != val]
@@ -74,8 +76,13 @@ def get_data(t1, t2):
 ticker1 = Select(value=DEFAULT_TICKERS[0], width=150, options=nix(DEFAULT_TICKERS[1], DEFAULT_TICKERS))
 ticker2 = Select(value=DEFAULT_TICKERS[1], width=150, options=nix(DEFAULT_TICKERS[0], DEFAULT_TICKERS))
 
+ticker3 = Select(value=DEFAULT_TICKERS[0], width=150, options=nix(DEFAULT_TICKERS[0], DEFAULT_TICKERS))
+
 # Radio buttons group
-radio_button_group = RadioButtonGroup(labels=['Normal', 'Moving Average', 'Prediction'], active=0)
+radio_button_group = RadioButtonGroup(labels=['Normal', 'Moving Average', 'Prediction CNN'], active=0)
+
+# Radio buttons group
+radio_button_group_second = RadioButtonGroup(labels=['Prediction CNN', 'Prediction LSTM'], active=0)
 
 # Slider
 slider = Slider(start=5, end=50, value=1, step=1, title="-", visible=False)
@@ -98,6 +105,13 @@ ts2.line('date', 't2', color="blue", source=source_static)
 ts2_smooth_1 = ts2.line('date', 't2_smooth_1', color="red", visible=False, source=source_static)
 ts2_pred = ts2.line('date', 't2_pred', color="red", visible=False, source=source_static)
 
+# Figure ts3
+IMAGE_TYPE = "Cnn1d"
+
+ts3_img_path = "BokehApp/static/" + str(ticker3.value) + "_" + IMAGE_TYPE + ".png"
+ts3 = Div(text="""<img src=\"""" + ts3_img_path + """\" alt="div_image">""",
+          width=864, height=432)
+
 
 # set up callbacks
 def ticker1_change(attrname, old, new):
@@ -107,6 +121,10 @@ def ticker1_change(attrname, old, new):
 
 def ticker2_change(attrname, old, new):
     ticker1.options = nix(new, DEFAULT_TICKERS)
+    update()
+
+
+def ticker3_change(attrname, old, new):
     update()
 
 
@@ -146,9 +164,20 @@ def radio_button_group_change(attrname, old, new):
 
     update()
 
+def radio_button_group_second_change(attrname, old, new):
+    update()
+
 
 def update(selected=None):
     t1, t2 = ticker1.value, ticker2.value
+
+    if radio_button_group_second.active == 0:
+        IMAGE_TYPE = "Cnn1d"
+    elif radio_button_group_second.active == 1:
+        IMAGE_TYPE = "LSTM_20days"
+
+    ts3_img_path = "BokehApp/static/" + str(ticker3.value) + "_" + IMAGE_TYPE + ".png"
+    ts3.text = """<img src=\"""" + ts3_img_path + """\" alt="div_image">"""
 
     df = get_data(t1, t2)
 
@@ -164,15 +193,35 @@ def update(selected=None):
 
 ticker1.on_change('value', ticker1_change)
 ticker2.on_change('value', ticker2_change)
+ticker3.on_change('value', ticker3_change)
+
 slider.on_change('value', slider_change)
 radio_button_group.on_change('active', radio_button_group_change)
+radio_button_group_second.on_change('active', radio_button_group_second_change)
 
 # set up layout
-heading = Div(text="""<h1>Time series comparison</h1>""", height=80)
+
+
+heading_general = Div(text="""<h2>Time series assignment</h2><style>h2, p {margin: 0;}</style>""" +
+                       """&nbsp&nbsp&nbsp&nbsp""" +
+                       """by Wladyslaw Eysymontt, Juan Luis Ruiz-Tagle Oriol and Jorge Martín Lasaosa</br>""")
+
+blank_space = Div(text="""""")
+
+heading_cnn = Div(text="""<h4>Time series presentation, smoothing and CNN prediction</h4>""")
 
 widgets = column(ticker1, ticker2, radio_button_group, slider)
 series = column(ts1, ts2, sizing_mode="stretch_width")
-layout = column(heading, row(widgets, series))
+
+heading_LSTM = Div(text="""<h4>Time series binary prediction with LSTM and CNN</h4>""")
+
+widgets_LSTM = column(ticker3, radio_button_group_second)
+series_LSTM = column(ts3, sizing_mode="stretch_width")
+
+
+layout = column(heading_general, blank_space,
+                heading_cnn, row(widgets, series), blank_space,
+                heading_LSTM, row(widgets_LSTM, series_LSTM))
 
 # initialize
 update()
